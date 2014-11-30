@@ -36,7 +36,10 @@ void renderFrame(u8 bgColor[3], u8 waterBorderColor[3], u8 waterColor[3])
 	drawBackground(bgColor, waterBorderColor, waterColor);
 
 	// status bar
-	drawStatusBar(wifiStatus, charging, batteryLevel);
+	drawStatusBar(wifiStatus, charging, batteryLevel, GFX_LEFT);
+
+	if(CONFIG_3D_SLIDERSTATE > 0)
+		drawStatusBar(wifiStatus, charging, batteryLevel, GFX_RIGHT);
 
 	// debug text
 	// drawDebug();
@@ -137,6 +140,7 @@ int main()
 	srvInit();
 	aptInit();
 	gfxInit();
+	gfxSet3D(true);
 	initFilesystem();
 	openSDArchive();
 	hidInit(NULL);

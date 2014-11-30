@@ -56,16 +56,19 @@ void updateBubble(bubble_t* bubble)
 	}
 }
 
-void drawBubbles(void)
+void drawBubbles(gfx3dSide_t side)
 {
 	int i;
 	//BUBBLES!!
 	for(i = 0;i < BUBBLE_COUNT;i += 1)
 	{
+		if(bubbles[i].y < 240 && side == GFX_RIGHT)
+			continue; //Don't draw bottom bubbles twice
+
 		// Then draw (no point in separating more because then we go through them all twice).
-		gfxDrawSpriteAlphaBlendFade((bubbles[i].y >= 240) ? (GFX_TOP) : (GFX_BOTTOM), GFX_LEFT, (u8*)bubble_bin, 32, 32, 
+		gfxDrawSpriteAlphaBlendFade((bubbles[i].y >= 240) ? (GFX_TOP) : (GFX_BOTTOM), side, (u8*)bubble_bin, 32, 32, 
 			((bubbles[i].y >= 240) ? -64 : 0) + bubbles[i].y % 240, 
-			((bubbles[i].y >= 240) ? 0 : -40) + bubbles[i].x, bubbles[i].fade);
+			((bubbles[i].y >= 240) ? 0 : -40) + bubbles[i].x + (side == GFX_LEFT ? STEREO_SEPARATION / 2 : -STEREO_SEPARATION / 2), bubbles[i].fade);
 	}
 }
 
@@ -107,16 +110,28 @@ void drawBackground(u8 bgColor[3], u8 waterBorderColor[3], u8 waterColor[3])
 	//top screen stuff
 	//gfxFillColorGradient(GFX_TOP, GFX_LEFT, waterBorderColor, waterColor);
 	gfxFillColor(GFX_TOP, GFX_LEFT, bgColor);
-	gfxDrawWave(GFX_TOP, GFX_LEFT, waterBorderColor, waterColor, 135, 20, 5, (gfxWaveCallback)&evaluateWater, &waterEffect);
-	gfxDrawWave(GFX_TOP, GFX_LEFT, waterColor, waterBorderColor, 130, 20, 0, (gfxWaveCallback)&evaluateWater, &waterEffect);
+	gfxDrawWave(GFX_TOP, GFX_LEFT, waterBorderColor, waterColor, 135, 20, 5, STEREO_SEPARATION * 2, (gfxWaveCallback)&evaluateWater, &waterEffect);
+	gfxDrawWave(GFX_TOP, GFX_LEFT, waterColor, waterBorderColor, 130, 20, 0, STEREO_SEPARATION * 2, (gfxWaveCallback)&evaluateWater, &waterEffect);
 
 	//sub screen stuff
 	gfxFillColorGradient(GFX_BOTTOM, GFX_LEFT, waterColor, waterBorderColor);
 
 	// Bubbles belong on both screens so they should be drawn second to last.
-	drawBubbles();
+	drawBubbles(GFX_LEFT);
 
 	// Finally draw the logo.
 	gfxDrawSpriteAlphaBlend(GFX_TOP, GFX_LEFT, (u8*)logo_bin, 113, 271, 64, 80);
+
+	// If slider is on 3D, draw for right eye.
+	if(CONFIG_3D_SLIDERSTATE > 0)
+	{
+		gfxFillColor(GFX_TOP, GFX_RIGHT, bgColor);
+		gfxDrawWave(GFX_TOP, GFX_RIGHT, waterBorderColor, waterColor, 135, 20, 5, 0, (gfxWaveCallback)&evaluateWater, &waterEffect);
+		gfxDrawWave(GFX_TOP, GFX_RIGHT, waterColor, waterBorderColor, 130, 20, 0, 0, (gfxWaveCallback)&evaluateWater, &waterEffect);
+
+		drawBubbles(GFX_RIGHT);
+
+		gfxDrawSpriteAlphaBlend(GFX_TOP, GFX_RIGHT, (u8*)logo_bin, 113, 271, 64, 80);
+	}
 }
 
